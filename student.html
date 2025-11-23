@@ -85,6 +85,8 @@
             align-items: center;
             gap: 12px;
             transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
         }
 
         .nav-link-custom:hover {
@@ -222,6 +224,36 @@
         }
         .table-custom tr:last-child td { border-bottom: none; }
 
+        /* Clickable Row Styling */
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .clickable-row:hover {
+            background-color: #f1f5f9; /* Light grey hover effect */
+        }
+
+        /* --- UNREAD MESSAGE INDICATOR --- */
+        .unread-row {
+            background-color: #f8fafc; /* Slightly brighter bg for unread */
+        }
+        
+        .unread-row td:first-child {
+            position: relative;
+        }
+        .unread-row td:first-child::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 60%; 
+            width: 4px;
+            background: var(--primary-color); /* The Purple Bar */
+            border-radius: 0 4px 4px 0;
+            box-shadow: 2px 0 10px rgba(99, 102, 241, 0.4);
+        }
+
         .status-badge {
             padding: 6px 12px;
             border-radius: 20px;
@@ -272,6 +304,24 @@
         /* Animations */
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Styles for specific dynamic sections */
+        .content-section { display: none; }
+        .content-section.active-section { display: block; animation: fadeIn 0.5s; }
+        
+        /* Anti Ragging Red Theme */
+        .theme-ragging {
+            border-color: #ef4444 !important;
+        }
+        .btn-danger-modern {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
 
         /* Responsive */
         @media(max-width: 992px) {
@@ -351,8 +401,10 @@
             
             <div class="tab-pane fade show active fade-in" id="v-pills-dashboard" role="tabpanel">
                 <div class="row justify-content-center">
-                    <div class="col-xl-8 col-lg-10">
-                        <div class="card-modern">
+                    <div class="col-xl-9 col-lg-11">
+                        
+                        <div class="card-modern" id="mainCard">
+                            
                             {% if success %}
                                 <div class="text-center py-5">
                                     <div class="mb-4">
@@ -360,46 +412,189 @@
                                             <i class="bi bi-check-lg" style="font-size: 2.5rem;"></i>
                                         </div>
                                     </div>
-                                    <h2 class="fw-bold text-dark mb-3">Ticket Submitted!</h2>
-                                    <p class="text-muted mb-4">We have received your complaint. The administration usually responds within 24 hours.</p>
-                                    <a href="/student" class="btn btn-primary-modern"><i class="bi bi-arrow-left me-2"></i> Submit Another</a>
+                                    
+                                    <h2 class="fw-bold text-dark mb-3">Submitted Successfully!</h2>
+                                    
+                                    {% if category == 'Anti-Ragging Reporting' %}
+                                        <div class="mx-auto" style="max-width: 600px;">
+                                            <p class="text-dark fw-medium mb-2 fs-5">We have received your report.</p>
+                                            <p class="text-muted mb-4">Please be assured that the administration takes a <strong>zero-tolerance approach</strong> to this scenario. We will immediately investigate the matter and take strict disciplinary action against those responsible. Your safety and anonymity are our highest priority.</p>
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted mb-4">Thanks for letting us know. We've received your complaint and the team will look into it shortly.</p>
+                                    {% endif %}
+
+                                    <a href="/student" class="btn btn-primary-modern"><i class="bi bi-arrow-left me-2"></i> Back to Dashboard</a>
                                 </div>
                             {% else %}
-                                <div class="d-flex align-items-center mb-5">
-                                    <div class="me-3" style="background: #e0e7ff; color: #4f46e5; padding: 10px; border-radius: 10px;">
-                                        <i class="bi bi-pencil-square fs-4"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="fw-bold m-0">Raise a Complaint</h4>
-                                        <span class="text-muted small">Describe your issue in detail below</span>
-                                    </div>
+
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="me-3" id="headerIcon" style="background: #e0e7ff; color: #4f46e5; padding: 10px; border-radius: 10px; transition: all 0.3s;">
+                                    <i class="bi bi-grid-fill fs-4"></i>
                                 </div>
-                                
+                                <div>
+                                    <h4 class="fw-bold m-0" id="headerTitle">Register Complaint</h4>
+                                    <span class="text-muted small">Select the category of your grievance</span>
+                                </div>
+                            </div>
+
+                            <div class="mb-4 pb-4 border-bottom">
+                                <label class="form-label">Select Issue Type</label>
+                                <select id="categorySelect" class="form-select form-select-lg fw-bold text-dark" style="border: 2px solid #e2e8f0;">
+                                    <optgroup label="General Maintenance & Services">
+                                        <option value="standard" selected>WiFi & Internet Issue</option>
+                                        <option value="standard">Hostel / Accommodation</option>
+                                        <option value="standard">Canteen / Food Quality</option>
+                                        <option value="standard">Sanitation & Hygiene</option>
+                                        <option value="standard">Academic / Classroom</option>
+                                        <option value="standard">Other Complaint</option>
+                                    </optgroup>
+                                    <optgroup label="Academic Grievances">
+                                        <option value="book_bank">Book Bank / Library Issue</option>
+                                        <option value="scholarship">Scholarship Grievance</option>
+                                    </optgroup>
+                                    <optgroup label="Emergency & Safety">
+                                        <option value="antiragging" class="text-danger">⚠ Anti-Ragging Reporting</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div id="section-standard" class="content-section active-section">
                                 <form method="POST">
+                                    <input type="hidden" name="category" id="hiddenCategoryInput" value="WiFi & Internet">
                                     <div class="row g-4">
                                         <div class="col-12">
-                                            <label class="form-label">Issue Category</label>
-                                            <select name="category" class="form-select" required>
-                                                <option value="" disabled selected>Select the type of issue...</option>
-                                                <option>WiFi & Internet Connectivity</option>
-                                                <option>Hostel & Accommodation</option>
-                                                <option>Canteen & Food Quality</option>
-                                                <option>Academic / Classroom</option>
-                                                <option>Sanitation & Hygiene</option>
-                                                <option>Other</option>
-                                            </select>
+                                            <label class="form-label">Detailed Description of Issue</label>
+                                            <textarea name="description" class="form-control" rows="5" placeholder="Please describe the problem in detail. Include room number, specific equipment, or location..." required></textarea>
                                         </div>
-                                        <div class="col-12">
-                                            <label class="form-label">Detailed Description</label>
-                                            <textarea name="description" class="form-control" rows="6" placeholder="Please explain the issue clearly. Include location or specific details if applicable..." required></textarea>
-                                        </div>
-                                        <div class="col-12 mt-4">
+                                        <div class="col-12 mt-3">
                                             <button type="submit" class="btn btn-primary-modern w-100">
-                                                Submit Ticket <i class="bi bi-send-fill ms-2"></i>
+                                                <i class="bi bi-send-fill me-2"></i> Register Complaint
                                             </button>
                                         </div>
                                     </div>
                                 </form>
+                            </div>
+
+                            <div id="section-book_bank" class="content-section">
+                                <div class="alert alert-warning border-0 d-flex align-items-center mb-4" style="background-color: #fffbeb; color: #b45309;">
+                                    <i class="bi bi-exclamation-circle-fill me-2"></i>
+                                    <div>Use this form to report issues regarding Book Bank distribution or availability.</div>
+                                </div>
+                                <form method="POST">
+                                    <input type="hidden" name="category" value="Book Bank Grievance"> 
+                                    <div class="row g-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label">Nature of Complaint</label>
+                                            <select class="form-select" name="subcategory">
+                                                <option>Books Not Received</option>
+                                                <option>Damaged / Torn Books Issued</option>
+                                                <option>Wrong Subject Books Allotted</option>
+                                                <option>Late Distribution</option>
+                                                <option>Other Library Issue</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Description / Remarks</label>
+                                            <textarea name="description" class="form-control" rows="4" placeholder="Explain the issue (e.g., 'Received a torn copy of Data Structures', 'Still waiting for Semester 3 bundle')..." required></textarea>
+                                        </div>
+                                        <div class="col-12 mt-3">
+                                            <button type="submit" class="btn btn-primary-modern w-100">
+                                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Report Book Issue
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div id="section-scholarship" class="content-section">
+                                <div class="alert alert-info border-0 d-flex align-items-center mb-4" style="background-color: #eff6ff; color: #1e40af;">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    <div>Report issues regarding scholarship applications, payments, or verification.</div>
+                                </div>
+                                <form method="POST">
+                                    <input type="hidden" name="category" value="Scholarship Grievance">
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Scholarship Category</label>
+                                            <select class="form-select" name="subcategory" required>
+                                                <option value="" disabled selected>Select Category...</option>
+                                                <option>General (EWS)</option>
+                                                <option>SC (Scheduled Caste)</option>
+                                                <option>ST (Scheduled Tribe)</option>
+                                                <option>Merit Cum Means</option>
+                                                <option>Green Ration Card</option>
+                                                <option>Other State Scheme</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Issue Type</label>
+                                            <select class="form-select" name="issue_type">
+                                                <option>Application Rejected</option>
+                                                <option>Payment/Disbursement Delay</option>
+                                                <option>Document Verification Pending</option>
+                                                <option>Portal Login Issue</option>
+                                                <option>Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Complaint Details</label>
+                                            <textarea name="description" class="form-control" rows="4" placeholder="Describe your grievance regarding the selected scholarship..." required></textarea>
+                                        </div>
+                                        <div class="col-12 mt-3">
+                                            <button type="submit" class="btn btn-primary-modern w-100">
+                                                <i class="bi bi-send-exclamation me-2"></i> Submit Scholarship Grievance
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div id="section-antiragging" class="content-section">
+                                <div class="alert alert-danger border-0 d-flex align-items-center mb-4" role="alert" style="background-color: #fef2f2; color: #991b1b; border-left: 5px solid #ef4444 !important;">
+                                    <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+                                    <div>
+                                        <div class="fw-bold">Zero Tolerance Policy</div>
+                                        <div class="small">Your identity will be kept strictly confidential.</div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-4 mb-4">
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-3 text-white text-center" style="background: linear-gradient(135deg, #1f2937, #111827);">
+                                            <small class="text-white-50 text-uppercase fw-bold">National Helpline</small>
+                                            <h3 class="fw-bold m-0 mt-1">1800-180-5522</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-3 text-white text-center" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">
+                                            <small class="text-white-50 text-uppercase fw-bold">Campus Security</small>
+                                            <h3 class="fw-bold m-0 mt-1">Ext. 999</h3>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h6 class="fw-bold text-danger mb-3 border-bottom pb-2">Report an Incident</h6>
+                                <form method="POST">
+                                    <input type="hidden" name="category" value="Anti-Ragging Reporting">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="anonReport" checked>
+                                        <label class="form-check-label fw-bold" for="anonReport">Report Anonymously</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Location & Time</label>
+                                        <input type="text" name="location" class="form-control" placeholder="e.g., Hostel Block A, Last Night">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Incident Details</label>
+                                        <textarea name="description" class="form-control" rows="4" placeholder="Describe what happened..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger-modern w-100">
+                                        <i class="bi bi-shield-exclamation me-2"></i> Submit Urgent Report
+                                    </button>
+                                </form>
+                            </div>
+
                             {% endif %}
                         </div>
                     </div>
@@ -409,36 +604,49 @@
             <div class="tab-pane fade fade-in" id="v-pills-history" role="tabpanel">
                 <div class="card-modern">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="fw-bold m-0">Recent Tickets</h5>
+                        <h5 class="fw-bold m-0">Activity History</h5>
                         <button id="filterBtn" class="btn btn-sm btn-outline-secondary rounded-pill"><i class="bi bi-filter me-1"></i> Filter: All</button>
                     </div>
                     
                     {% if complaints %}
                     <div class="table-responsive">
-                        <table class="table table-custom">
+                        <table class="table table-custom align-middle table-hover">
                             <thead>
                                 <tr>
-                                    <th width="15%">Date</th>
+                                    <th width="18%" class="ps-4">Date & Time</th>
                                     <th width="20%">Category</th>
-                                    <th width="45%">Description / Remarks</th>
-                                    <th width="20%">Status</th>
+                                    <th width="42%">Description / Remarks</th>
+                                    <th width="20%" class="text-end pe-4">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="ticketTableBody">
                                 {% for c in complaints %}
-                                <tr>
-                                    <td class="text-muted small">{{ c.date_posted.strftime('%d %b, %Y') }}</td>
-                                    <td class="fw-bold text-dark">{{ c.category }}</td>
+                                <tr class="clickable-row {% if c.admin_comment %}unread-row{% endif %}" onclick="viewComplaint(this)" 
+                                    data-category="{{ c.category }}"
+                                    data-description="{{ c.description }}"
+                                    data-response="{{ c.admin_comment or '' }}"
+                                    data-status="{{ c.status }}"
+                                    data-date="{{ c.date_posted.strftime('%d %b, %Y') }}"
+                                    data-time="{{ c.date_posted.strftime('%I:%M %p') }}">
+                                    
+                                    <td class="ps-4">
+                                        <div class="utc-date-time" data-timestamp="{{ c.date_posted.strftime('%Y-%m-%dT%H:%M:%SZ') }}">
+                                            <div class="fw-bold text-dark" style="font-size: 0.9rem;">{{ c.date_posted.strftime('%d %b, %Y') }}</div>
+                                            <div class="text-muted small" style="font-size: 0.8rem;"><i class="bi bi-clock me-1"></i>{{ c.date_posted.strftime('%I:%M %p') }}</div>
+                                        </div>
+                                    </td>
                                     <td>
-                                        <span class="d-block text-secondary mb-2">{{ c.description }}</span>
+                                        <span class="fw-bold text-dark" style="font-size: 0.9rem;">{{ c.category }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="d-block text-dark mb-1 text-truncate" style="font-weight: 500; font-size: 0.95rem; line-height: 1.5; max-width: 300px;">{{ c.description }}</span>
                                         {% if c.admin_comment %}
-                                            <div class="bg-light rounded p-2 border-start border-3 border-success">
-                                                <small class="text-success fw-bold d-block"><i class="bi bi-reply-fill"></i> Admin Response:</small> 
-                                                <small class="text-dark">{{ c.admin_comment }}</small>
+                                            <div class="mt-1">
+                                                <small class="text-success fw-bold"><i class="bi bi-reply-fill"></i> Admin Responded</small> 
                                             </div>
                                         {% endif %}
                                     </td>
-                                    <td>
+                                    <td class="text-end pe-4">
                                         {% if c.status == 'Resolved' %}
                                             <span class="status-badge status-resolved"><i class="bi bi-check-circle-fill"></i> Resolved</span>
                                         {% else %}
@@ -453,7 +661,7 @@
                     {% else %}
                         <div class="text-center py-5 opacity-50">
                             <i class="bi bi-inbox fs-1 mb-2 d-block"></i>
-                            <span>No complaints found in history</span>
+                            <span>No history found</span>
                         </div>
                     {% endif %}
                 </div>
@@ -527,6 +735,43 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+</div>
+
+<!-- Detailed View Modal (UPDATED FOR LONG CONTENT) -->
+<div class="modal fade" id="viewComplaintModal" tabindex="-1" aria-hidden="true">
+    <!-- Added modal-dialog-scrollable to handle very long content -->
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header border-0 p-4 pb-2">
+                <div>
+                    <h5 class="modal-title fw-bold" id="vc_category">Category Name</h5>
+                    <small class="text-muted" id="vc_date">Date & Time</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 pt-2">
+                <div class="mb-3">
+                    <span class="status-badge" id="vc_status">Status</span>
+                </div>
+                
+                <div class="p-3 bg-light rounded-3 mb-4">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-2">Description</h6>
+                    <p class="text-dark mb-0 text-break" id="vc_desc" style="white-space: pre-line; font-size: 0.95rem; text-align: left;">User description goes here...</p>
+                </div>
+
+                <div id="vc_response_box" class="d-none">
+                    <div class="p-3 rounded-3 border border-success bg-opacity-10 bg-success">
+                        <h6 class="fw-bold text-success text-uppercase small mb-2"><i class="bi bi-reply-fill"></i> Admin Response</h6>
+                        <!-- text-break ensures long words/links wrap properly. text-start aligns left. -->
+                        <div class="text-dark text-break text-start" id="vc_response" style="white-space: pre-line; line-height: 1.6;">Admin reply goes here...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -616,87 +861,180 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // LOGIC: Handle Sections based on Department
-    const deptRules = {
-        'ICE': ['1'],
-        'EEE': ['1'],
-        'ECE': ['1', '2', '3'],
-        'IT': ['1', '2'],
-        'CSE': ['1', '2']
-    };
-
-    function updateSectionOptions() {
-        const deptSelect = document.getElementById('department');
-        const secSelect = document.getElementById('section');
-        const selectedDept = deptSelect.value;
-        const currentSection = "{{ student.section }}"; 
-
-        secSelect.innerHTML = '';
-
-        if (selectedDept && deptRules[selectedDept]) {
-            deptRules[selectedDept].forEach(sec => {
-                const option = document.createElement('option');
-                option.value = sec;
-                option.text = sec;
-                if (sec === currentSection || deptRules[selectedDept].length === 1) {
-                    option.selected = true;
-                }
-                secSelect.appendChild(option);
-            });
-        } else {
-            secSelect.innerHTML = '<option value="">Select Dept First</option>';
+    // Function to View Detailed Complaint in Modal
+    function viewComplaint(row) {
+        
+        // --- Remove Unread Indicator Visuals ---
+        if (row.classList.contains('unread-row')) {
+            row.classList.remove('unread-row');
         }
+
+        // Get data attributes
+        const category = row.getAttribute('data-category');
+        const desc = row.getAttribute('data-description');
+        const response = row.getAttribute('data-response');
+        const status = row.getAttribute('data-status');
+        
+        // Get the processed local date/time from the cell (since JS already converted it)
+        const dateCell = row.querySelector('.utc-date-time');
+        let dateTimeStr = "";
+        if(dateCell) {
+            const datePart = dateCell.querySelector('.fw-bold').innerText;
+            const timePart = dateCell.querySelector('.text-muted').innerText;
+            dateTimeStr = datePart + " • " + timePart;
+        } else {
+            dateTimeStr = row.getAttribute('data-date');
+        }
+
+        // Populate Modal Elements
+        document.getElementById('vc_category').innerText = category;
+        document.getElementById('vc_date').innerText = dateTimeStr;
+        document.getElementById('vc_desc').innerText = desc;
+        
+        // Status Styling
+        const statusBadge = document.getElementById('vc_status');
+        statusBadge.innerHTML = status;
+        if(status === 'Resolved') {
+            statusBadge.className = 'status-badge status-resolved';
+            statusBadge.innerHTML = '<i class="bi bi-check-circle-fill"></i> Resolved';
+        } else {
+            statusBadge.className = 'status-badge status-pending';
+            statusBadge.innerHTML = '<i class="bi bi-hourglass-split"></i> Pending';
+        }
+
+        // Admin Response Logic
+        const responseBox = document.getElementById('vc_response_box');
+        if(response && response.trim() !== "") {
+            responseBox.classList.remove('d-none');
+            document.getElementById('vc_response').innerText = response;
+        } else {
+            responseBox.classList.add('d-none');
+        }
+
+        // Show Modal
+        const modal = new bootstrap.Modal(document.getElementById('viewComplaintModal'));
+        modal.show();
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        const currentDept = "{{ student.department }}";
-        const currentYear = "{{ student.year }}";
         
-        if (currentDept) {
-            document.getElementById('department').value = currentDept;
-            updateSectionOptions();
-        }
+        // --- 1. DROPDOWN SWITCHER LOGIC ---
+        const categorySelect = document.getElementById('categorySelect');
+        const mainCard = document.getElementById('mainCard');
+        const headerIcon = document.getElementById('headerIcon');
+        const headerTitle = document.getElementById('headerTitle');
+        const hiddenCategoryInput = document.getElementById('hiddenCategoryInput');
         
-        if (currentYear) {
-            const yearSelect = document.getElementsByName('year')[0];
-            yearSelect.value = currentYear;
-        }
+        if (categorySelect) {
+            categorySelect.addEventListener('change', function() {
+                const selectedValue = this.value;
+                const selectedText = this.options[this.selectedIndex].text;
+                
+                // Hide all sections
+                document.querySelectorAll('.content-section').forEach(el => {
+                    el.classList.remove('active-section');
+                });
 
-        // Initial Setup Modal logic preserved
-        {% if show_setup_modal %}
-            var myModal = new bootstrap.Modal(document.getElementById('editProfileModal'), {
-                backdrop: 'static',
-                keyboard: false
+                // Reset Theme
+                mainCard.classList.remove('theme-ragging');
+                headerIcon.style.backgroundColor = '#e0e7ff';
+                headerIcon.style.color = '#4f46e5';
+                
+                // Determine which section to show
+                if (selectedValue === 'book_bank') {
+                    document.getElementById('section-book_bank').classList.add('active-section');
+                    headerTitle.textContent = "Book Bank Grievance";
+                    headerIcon.innerHTML = '<i class="bi bi-book-half fs-4"></i>';
+                } 
+                else if (selectedValue === 'scholarship') {
+                    document.getElementById('section-scholarship').classList.add('active-section');
+                    headerTitle.textContent = "Scholarship Grievance";
+                    headerIcon.innerHTML = '<i class="bi bi-mortarboard-fill fs-4"></i>';
+                }
+                else if (selectedValue === 'antiragging') {
+                    document.getElementById('section-antiragging').classList.add('active-section');
+                    headerTitle.textContent = "Anti-Ragging Cell";
+                    headerIcon.innerHTML = '<i class="bi bi-shield-fill-exclamation fs-4"></i>';
+                    // Apply Red Theme
+                    mainCard.classList.add('theme-ragging');
+                    headerIcon.style.backgroundColor = '#fee2e2';
+                    headerIcon.style.color = '#dc2626';
+                } 
+                else {
+                    // Standard categories (WiFi, Hostel etc.)
+                    document.getElementById('section-standard').classList.add('active-section');
+                    headerTitle.textContent = "Register Complaint";
+                    headerIcon.innerHTML = '<i class="bi bi-grid-fill fs-4"></i>';
+                    if(hiddenCategoryInput) hiddenCategoryInput.value = selectedText;
+                }
             });
-            document.getElementById('editModalTitle').innerHTML = 'Welcome! Complete Your Profile';
-            myModal.show();
-        {% endif %}
+        }
 
-        // --- NEW FILTER LOGIC START ---
+
+        // --- 2. DEPARTMENT LOGIC ---
+        const deptRules = {
+            'ICE': ['1'],
+            'EEE': ['1'],
+            'ECE': ['1', '2', '3'],
+            'IT': ['1', '2'],
+            'CSE': ['1', '2']
+        };
+
+        const deptSelect = document.getElementById('department');
+        const secSelect = document.getElementById('section');
+
+        function updateSectionOptions() {
+            if(!deptSelect || !secSelect) return;
+            
+            const selectedDept = deptSelect.value;
+            const currentSection = "{{ student.section }}"; 
+
+            secSelect.innerHTML = '';
+
+            if (selectedDept && deptRules[selectedDept]) {
+                deptRules[selectedDept].forEach(sec => {
+                    const option = document.createElement('option');
+                    option.value = sec;
+                    option.text = sec;
+                    if (sec === currentSection || deptRules[selectedDept].length === 1) {
+                        option.selected = true;
+                    }
+                    secSelect.appendChild(option);
+                });
+            } else {
+                secSelect.innerHTML = '<option value="">Select Dept First</option>';
+            }
+        }
+        
+        if(deptSelect) {
+            deptSelect.addEventListener('change', updateSectionOptions);
+            const currentDept = "{{ student.department }}";
+            if (currentDept) {
+                deptSelect.value = currentDept;
+                updateSectionOptions();
+            }
+        }
+        
+        const currentYear = "{{ student.year }}";
+        const yearSelect = document.getElementsByName('year')[0];
+        if(yearSelect && currentYear) yearSelect.value = currentYear;
+
+
+        // --- 3. FILTER LOGIC ---
         const filterBtn = document.getElementById('filterBtn');
         const tableBody = document.getElementById('ticketTableBody');
 
         if (filterBtn && tableBody) {
             let currentFilter = 'All';
-            
-            // Status Logic: 
-            // Cycle: All -> Pending -> Resolved -> All
             filterBtn.addEventListener('click', function() {
-                if (currentFilter === 'All') {
-                    currentFilter = 'Pending';
-                } else if (currentFilter === 'Pending') {
-                    currentFilter = 'Resolved';
-                } else {
-                    currentFilter = 'All';
-                }
+                if (currentFilter === 'All') currentFilter = 'Pending';
+                else if (currentFilter === 'Pending') currentFilter = 'Resolved';
+                else currentFilter = 'All';
                 
-                // Update Button UI
                 this.innerHTML = `<i class="bi bi-filter me-1"></i> Filter: ${currentFilter}`;
 
-                // Loop rows
                 const rows = tableBody.getElementsByTagName('tr');
                 for (let row of rows) {
-                    // Status is the 4th column (index 3)
                     let statusCell = row.getElementsByTagName('td')[3];
                     if (statusCell) {
                         let text = statusCell.textContent || statusCell.innerText;
@@ -709,7 +1047,21 @@
                 }
             });
         }
-        // --- NEW FILTER LOGIC END ---
+
+        // --- 4. TIMEZONE CONVERSION LOGIC ---
+        document.querySelectorAll('.utc-date-time').forEach(el => {
+            const serverTimeStr = el.getAttribute('data-timestamp');
+            if(serverTimeStr) {
+                const dateObj = new Date(serverTimeStr);
+                const datePart = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                const timePart = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                el.innerHTML = `
+                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">${datePart}</div>
+                    <div class="text-muted small" style="font-size: 0.8rem;"><i class="bi bi-clock me-1"></i>${timePart}</div>
+                `;
+            }
+        });
     });
 </script>
 
